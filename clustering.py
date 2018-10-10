@@ -73,48 +73,59 @@ class Cluster:
         print(f'Tfidf matrix shape: {tfidf_matrix.shape}')
         terms = tfidf_vectorizer.get_feature_names()
         similarity_matrix = cosine_similarity(tfidf_matrix)
+        dist = 1 - cosine_similarity(tfidf_matrix)
 
-        #Plot similarity
-        sns.set(style="white")
-        sns.set(font_scale=1)
-        mask = np.zeros_like(similarity_matrix, dtype=np.bool)
-        mask[np.triu_indices_from(mask)] = False
-        f, ax = plt.subplots(figsize=(11, 9))
+        #K-means clustering
+        from sklearn.cluster import KMeans
+        num_clusters = 5
+        km = KMeans(n_clusters = num_clusters)
+        km.fit(tfidf_matrix)
+        clusters = km.labels_.tolist()
 
-        c = sns.heatmap(similarity_matrix, mask=mask, cmap="YlGnBu", vmax=1,
-                    square=True, linewidths=0.01,  ax=ax)
-        c.set(xlabel='Document ID', ylabel='Document ID')
-        # plt.show()
-        fig = c.get_figure()
-        fig.suptitle('TF-IDF Document Similarity Matrix')
+        books = {'book': dcouments, 'verses': texts}
+        frame = pd.DataFrame(books, index = [clusters], columns = ['book', 'cluster'])
+        print(frame['cluster'].value_counts())
 
-        fig.savefig("similarity.png")
+        #Plot similarity--------------------------------------------------------
+        # sns.set(style="white")
+        # sns.set(font_scale=1)
+        # mask = np.zeros_like(similarity_matrix, dtype=np.bool)
+        # mask[np.triu_indices_from(mask)] = False
+        # f, ax = plt.subplots(figsize=(11, 9))
+        #
+        # c = sns.heatmap(similarity_matrix, mask=mask, cmap="YlGnBu", vmax=1,
+        #             square=True, linewidths=0.01,  ax=ax)
+        # c.set(xlabel='Document ID', ylabel='Document ID')
+        # # plt.show()
+        # fig = c.get_figure()
+        # fig.suptitle('TF-IDF Document Similarity Matrix')
+        #
+        # fig.savefig("similarity.png")
 
         #hierarchy document clustering------------------------------------------
         #Ward clustering is an agglomerative clustering method, meaning that at each stage,
         #the pair of clusters with minimum between-cluster distance are merged. Used the precomputed
         # cosine distance matrix (dist) to calclate a linkage_matrix, which then plot as a dendrogram.
 
-        print (f'Hierarchy document clustering...')
-        dist = 1 - cosine_similarity(tfidf_matrix)
-        linkage_matrix = hierarchy.ward(dist) #define the linkage_matrix using ward clustering pre-computed distances
-        # linkage_matrix = hierarchy.single(dist)
-        # linkage_matrix = hierarchy.centroid(dist)
-        # linkage_matrix = hierarchy.median(dist)
-        fig, ax = plt.subplots(figsize=(10, 20)) # set size
-        ax = hierarchy.dendrogram(linkage_matrix, orientation="right", labels=documents);
-
-        plt.tick_params(\
-            axis= 'x',          # changes apply to the x-axis
-            which='both',      # both major and minor ticks are affected
-            bottom= False,      # ticks along the bottom edge are off
-            top= False,         # ticks along the top edge are off
-            labelbottom= False)
-
-        plt.tight_layout() #show plot with tight layout
-
-        #Save figure
-        plt.savefig('ward_clusters.png', dpi=200) #save figure as ward_clusters
+        # print (f'Hierarchy document clustering...')
+        # linkage_matrix = hierarchy.ward(dist) #define the linkage_matrix using ward clustering pre-computed distances
+        # # linkage_matrix = hierarchy.single(dist)
+        # # linkage_matrix = hierarchy.centroid(dist)
+        # # linkage_matrix = hierarchy.median(dist)
+        # fig, ax = plt.subplots(figsize=(10, 20)) # set size
+        # ax = hierarchy.dendrogram(linkage_matrix, orientation="right", labels=documents);
+        #
+        # plt.tick_params(\
+        #     axis= 'x',          # changes apply to the x-axis
+        #     which='both',      # both major and minor ticks are affected
+        #     bottom= False,      # ticks along the bottom edge are off
+        #     top= False,         # ticks along the top edge are off
+        #     labelbottom= False)
+        #
+        # plt.tight_layout() #show plot with tight layout
+        #
+        # #Save figure
+        # plt.savefig('ward_clusters.png', dpi=200) #save figure as ward_clusters
         #-----------------------------------------------------------------------
 
         end = time.time()
